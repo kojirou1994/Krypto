@@ -90,7 +90,7 @@ func ccError(_ status: CCStatus) throws {
 
 public enum CommonKrypto {
 
-  public static func crypt(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes, input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
+  public static func crypt(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = CCKryptor.NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
     try input.withUnsafeBytes { inputBuffer in
       try key.withUnsafeBytes { keyBuffer in
         try initializationVector.withUnsafeBytes { ivBuffer in

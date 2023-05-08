@@ -7,7 +7,7 @@ public final class CCKryptor {
   internal let cryptorRef: OpaquePointer
 
   @inlinable
-  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes) throws {
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector()) throws {
     var ptr: OpaquePointer?
     try key.withUnsafeBytes { keyBuffer in
       try initializationVector.withUnsafeBytes { ivBuffer in
@@ -44,19 +44,12 @@ public final class CCKryptor {
   }
 
   @inlinable
-  public func reset(newInitializationVector: some ContiguousBytes) throws {
+  public func reset(newInitializationVector: some ContiguousBytes = NoneInitializationVector()) throws {
     try newInitializationVector.withUnsafeBytes { ivBuffer in
       try ccError(
         CCCryptorReset(cryptorRef, ivBuffer.baseAddress)
       )
     }
-  }
-
-  @inlinable
-  public func reset() throws {
-    try ccError(
-      CCCryptorReset(cryptorRef, nil)
-    )
   }
 
   @inlinable
@@ -140,5 +133,13 @@ extension CCKryptor {
 
     @_alwaysEmitIntoClient
     public static var ecbMode: Self { .init(rawValue: kCCOptionECBMode) }
+  }
+
+  public struct NoneInitializationVector: ContiguousBytes {
+    public init() {}
+    @inlinable
+    public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+      try body(.init(start: nil, count: 0))
+    }
   }
 }
