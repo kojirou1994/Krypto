@@ -1,7 +1,7 @@
 #if canImport(CommonCrypto)
 import CommonCrypto
 
-public struct CommonKryptoError: RawRepresentable, Error {
+public struct CommonKryptoError: RawRepresentable, Error, Equatable {
   public init(rawValue: CCStatus) {
     self.rawValue = rawValue
   }
@@ -12,6 +12,27 @@ public struct CommonKryptoError: RawRepresentable, Error {
   }
 
   public let rawValue: CCStatus
+}
+
+extension CommonKryptoError: CustomStringConvertible {
+  public var description: String {
+    switch self {
+    case .alignmentError: return "Input data did not decode or decrypt properly."
+    case .paramError: return "Illegal parameter value."
+    case .bufferTooSmall: return "Insufficent buffer provided for specified operation."
+    case .memoryFailure: return "Memory allocation failure."
+    case .decodeError: return "Input data did not decode or decrypt properly."
+    case .unimplemented: return "Function not implemented for the current algorithm."
+    case .overflow: return "overflow"
+    case .rngFailure: return "rngFailure"
+    case .unspecifiedError: return "unspecifiedError"
+    case .callSequenceError: return "callSequenceError"
+    case .keySizeError: return "keySizeError"
+    case .invalidKey: return "invalidKey"
+    default:
+      return "unknown: \(rawValue)"
+    }
+  }
 }
 
 public extension CommonKryptoError {
@@ -69,15 +90,15 @@ func ccError(_ status: CCStatus) throws {
 
 public enum CommonKrypto {
 
-  public static func crypt<Input: ContiguousBytes, Key: ContiguousBytes, IV: ContiguousBytes>(operation: Int, algorithm: Int, options: Int, key: Key, initializationVector: IV, input: Input, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
+  public static func crypt<Input: ContiguousBytes, Key: ContiguousBytes, IV: ContiguousBytes>(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: Key, initializationVector: IV, input: Input, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
     try input.withUnsafeBytes { inputBuffer in
       try key.withUnsafeBytes { keyBuffer in
         try initializationVector.withUnsafeBytes { ivBuffer in
           try ccError(
             CCCrypt(
-              .init(operation),
-              .init(algorithm),
-              .init(options),
+              numericCast(operation.rawValue),
+              numericCast(algorithm.rawValue),
+              numericCast(options.rawValue),
               keyBuffer.baseAddress, keyBuffer.count,
               ivBuffer.baseAddress,
               inputBuffer.baseAddress, inputBuffer.count,

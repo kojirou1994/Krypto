@@ -5,19 +5,17 @@ import CommonCrypto
 public enum AESCBC<Input: ContiguousBytes, Key: ContiguousBytes, IV: ContiguousBytes> {
 
   public static func decrypt(input: Input, key: Key, iv: IV) throws -> [UInt8] {
-    try _cbc(input: input, key: key, iv: iv, operation: kCCDecrypt)
+    try _cbc(input: input, key: key, iv: iv, operation: .decryption)
   }
 
   public static func encrypt(input: Input, key: Key, iv: IV) throws -> [UInt8] {
-    try _cbc(input: input, key: key, iv: iv, operation: kCCEncrypt)
+    try _cbc(input: input, key: key, iv: iv, operation: .encryption)
   }
 
-  private static func _cbc(input: Input, key: Key, iv: IV, operation: Int) throws -> [UInt8] {
-    let outputBufferLength = input.withUnsafeBytes { inputBuffer in
-      inputBuffer.count + kCCBlockSizeAES128
-    }
+  private static func _cbc(input: Input, key: Key, iv: IV, operation: CCKryptor.Operation) throws -> [UInt8] {
+    let outputBufferLength = input.withUnsafeBytes(\.count) + CCKryptor.Algorithm.aes.blockSize
     return try [UInt8](unsafeUninitializedCapacity: outputBufferLength) { outputBuffer, initializedCount in
-      try CommonKrypto.crypt(operation: operation, algorithm: kCCAlgorithmAES, options: kCCOptionPKCS7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
+      try CommonKrypto.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
     }
   }
 }

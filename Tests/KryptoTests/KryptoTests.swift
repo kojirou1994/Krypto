@@ -11,7 +11,7 @@ final class KryptoTests: XCTestCase {
 
     let oneShotEncryptedData = try AESCBC.encrypt(input: originData, key: key, iv: iv)
 
-    let encryptor = try CCKryptor(operation: kCCEncrypt, algorithm: kCCAlgorithmAES, options: kCCOptionPKCS7Padding, key: key, initializationVector: iv)
+    let encryptor = try CCKryptor(operation: .encryption, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv)
 
     var streamEntryptedData = [UInt8]()
     streamEntryptedData.reserveCapacity(originData.count + kCCBlockSizeAES128)
