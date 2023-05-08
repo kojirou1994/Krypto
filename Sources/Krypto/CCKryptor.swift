@@ -7,7 +7,7 @@ public final class CCKryptor {
   internal let cryptorRef: OpaquePointer
 
   @inlinable
-  public init<Key: ContiguousBytes, IV: ContiguousBytes>(operation: Operation, algorithm: Algorithm, options: Options, key: Key, initializationVector: IV) throws {
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes) throws {
     var ptr: OpaquePointer?
     try key.withUnsafeBytes { keyBuffer in
       try initializationVector.withUnsafeBytes { ivBuffer in
@@ -28,7 +28,7 @@ public final class CCKryptor {
   }
 
   @inlinable
-  public func update<Input: ContiguousBytes>(input: Input, to output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws {
+  public func update(input: some ContiguousBytes, to output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws {
     try input.withUnsafeBytes { inputBuffer in
       try ccError(
         CCCryptorUpdate(cryptorRef, inputBuffer.baseAddress, inputBuffer.count, output.baseAddress, output.count, &dataOutMoved)
@@ -44,7 +44,7 @@ public final class CCKryptor {
   }
 
   @inlinable
-  public func reset<IV: ContiguousBytes>(newInitializationVector: IV) throws {
+  public func reset(newInitializationVector: some ContiguousBytes) throws {
     try newInitializationVector.withUnsafeBytes { ivBuffer in
       try ccError(
         CCCryptorReset(cryptorRef, ivBuffer.baseAddress)

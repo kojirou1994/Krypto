@@ -1,5 +1,4 @@
 import XCTest
-import CommonCrypto
 import Krypto
 
 final class KryptoTests: XCTestCase {
@@ -14,10 +13,10 @@ final class KryptoTests: XCTestCase {
     let encryptor = try CCKryptor(operation: .encryption, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv)
 
     var streamEntryptedData = [UInt8]()
-    streamEntryptedData.reserveCapacity(originData.count + kCCBlockSizeAES128)
+    streamEntryptedData.reserveCapacity(originData.count + CCKryptor.Algorithm.aes.blockSize)
 
     let blockSize = 100
-    let tempBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: blockSize + kCCBlockSizeAES128, alignment: MemoryLayout<UInt8>.alignment)
+    let tempBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: blockSize + CCKryptor.Algorithm.aes.blockSize, alignment: MemoryLayout<UInt8>.alignment)
     defer {
       tempBuffer.deallocate()
     }

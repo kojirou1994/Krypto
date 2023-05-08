@@ -2,17 +2,17 @@
 
 import CommonCrypto
 
-public enum AESCBC<Input: ContiguousBytes, Key: ContiguousBytes, IV: ContiguousBytes> {
+public enum AESCBC {
 
-  public static func decrypt(input: Input, key: Key, iv: IV) throws -> [UInt8] {
+  public static func decrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws -> [UInt8] {
     try _cbc(input: input, key: key, iv: iv, operation: .decryption)
   }
 
-  public static func encrypt(input: Input, key: Key, iv: IV) throws -> [UInt8] {
+  public static func encrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws -> [UInt8] {
     try _cbc(input: input, key: key, iv: iv, operation: .encryption)
   }
 
-  private static func _cbc(input: Input, key: Key, iv: IV, operation: CCKryptor.Operation) throws -> [UInt8] {
+  private static func _cbc(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes, operation: CCKryptor.Operation) throws -> [UInt8] {
     let outputBufferLength = input.withUnsafeBytes(\.count) + CCKryptor.Algorithm.aes.blockSize
     return try [UInt8](unsafeUninitializedCapacity: outputBufferLength) { outputBuffer, initializedCount in
       try CommonKrypto.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
