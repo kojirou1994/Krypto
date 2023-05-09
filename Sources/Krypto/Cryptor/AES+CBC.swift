@@ -12,10 +12,10 @@ public enum AESCBC {
     try _cbc(input: input, key: key, iv: iv, operation: .encryption)
   }
 
-  private static func _cbc(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes, operation: CCKryptor.Operation) throws -> [UInt8] {
-    let outputBufferLength = input.withUnsafeBytes(\.count) + CCKryptor.Algorithm.aes.blockSize
+  private static func _cbc(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes, operation: Cryptor.Operation) throws -> [UInt8] {
+    let outputBufferLength = input.withUnsafeBytes(\.count) + Cryptor.Algorithm.aes.blockSize
     return try [UInt8](unsafeUninitializedCapacity: outputBufferLength) { outputBuffer, initializedCount in
-      try CommonKrypto.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
+      try Cryptor.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
     }
   }
 }

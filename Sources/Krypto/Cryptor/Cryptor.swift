@@ -1,7 +1,10 @@
 #if canImport(CommonCrypto)
 import CommonCrypto
 
-public final class CCKryptor {
+@available(*, deprecated, renamed: "Cryptor")
+public typealias CCKryptor = Cryptor
+
+public final class Cryptor {
 
   @usableFromInline
   internal let cryptorRef: OpaquePointer
@@ -89,7 +92,7 @@ public final class CCKryptor {
 }
 #endif
 
-extension CCKryptor {
+extension Cryptor {
   public struct Operation: RawRepresentable, Equatable {
     public let rawValue: Int
     public init(rawValue: Int) {
@@ -180,6 +183,30 @@ extension CCKryptor {
     @inlinable
     public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
       try body(.init(start: nil, count: 0))
+    }
+  }
+}
+
+
+public extension Cryptor {
+  static func crypt(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
+    try input.withUnsafeBytes { inputBuffer in
+      try key.withUnsafeBytes { keyBuffer in
+        try initializationVector.withUnsafeBytes { ivBuffer in
+          try ccError(
+            CCCrypt(
+              numericCast(operation.rawValue),
+              numericCast(algorithm.rawValue),
+              numericCast(options.rawValue),
+              keyBuffer.baseAddress, keyBuffer.count,
+              ivBuffer.baseAddress,
+              inputBuffer.baseAddress, inputBuffer.count,
+              outputBuffer.baseAddress, outputBuffer.count,
+              &dataOutMoved
+            )
+          )
+        }
+      }
     }
   }
 }

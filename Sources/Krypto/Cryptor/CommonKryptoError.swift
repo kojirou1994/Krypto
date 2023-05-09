@@ -90,25 +90,9 @@ func ccError(_ status: CCStatus) throws {
 
 public enum CommonKrypto {
 
+  @available(*, deprecated, renamed: "Cryptor.crypt")
   public static func crypt(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = CCKryptor.NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
-    try input.withUnsafeBytes { inputBuffer in
-      try key.withUnsafeBytes { keyBuffer in
-        try initializationVector.withUnsafeBytes { ivBuffer in
-          try ccError(
-            CCCrypt(
-              numericCast(operation.rawValue),
-              numericCast(algorithm.rawValue),
-              numericCast(options.rawValue),
-              keyBuffer.baseAddress, keyBuffer.count,
-              ivBuffer.baseAddress,
-              inputBuffer.baseAddress, inputBuffer.count,
-              outputBuffer.baseAddress, outputBuffer.count,
-              &dataOutMoved
-            )
-          )
-        }
-      }
-    }
+    try Cryptor.crypt(operation: operation, algorithm: algorithm, options: options, key: key, initializationVector: initializationVector, input: input, outputBuffer: outputBuffer, dataOutMoved: &dataOutMoved)
   }
 }
 #endif

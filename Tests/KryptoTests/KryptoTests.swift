@@ -10,13 +10,13 @@ final class KryptoTests: XCTestCase {
 
     let oneShotEncryptedData = try AESCBC.encrypt(input: originData, key: key, iv: iv)
 
-    let encryptor = try CCKryptor(operation: .encryption, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv)
+    let encryptor = try Cryptor(operation: .encryption, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv)
 
     var streamEntryptedData = [UInt8]()
-    streamEntryptedData.reserveCapacity(originData.count + CCKryptor.Algorithm.aes.blockSize)
+    streamEntryptedData.reserveCapacity(originData.count + Cryptor.Algorithm.aes.blockSize)
 
     let blockSize = 100
-    let tempBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: blockSize + CCKryptor.Algorithm.aes.blockSize, alignment: MemoryLayout<UInt8>.alignment)
+    let tempBuffer = UnsafeMutableRawBufferPointer.allocate(byteCount: blockSize + Cryptor.Algorithm.aes.blockSize, alignment: MemoryLayout<UInt8>.alignment)
     defer {
       tempBuffer.deallocate()
     }
