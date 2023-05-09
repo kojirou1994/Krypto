@@ -1,5 +1,6 @@
 #if canImport(CommonCrypto)
 import CommonCrypto
+import CUtility
 
 @available(*, deprecated, renamed: "Cryptor")
 public typealias CCKryptor = Cryptor
@@ -11,48 +12,67 @@ public final class Cryptor {
 
   @inlinable
   public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector()) throws {
-    var ptr: OpaquePointer?
-    try key.withUnsafeBytes { keyBuffer in
-      try initializationVector.withUnsafeBytes { ivBuffer in
-        try ccError(
-          CCCryptorCreate(
-            numericCast(operation.rawValue),
-            numericCast(algorithm.rawValue),
-            numericCast(options.rawValue),
-            keyBuffer.baseAddress, keyBuffer.count,
-            ivBuffer.baseAddress, &ptr)
-        )
-      }
-    }
-    guard let v = ptr else {
-      throw CommonKryptoError.memoryFailure
-    }
-    self.cryptorRef = v
-  }
-
-  @inlinable
-  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), data: UnsafeMutableRawBufferPointer, dataUsed: UnsafeMutablePointer<Int>?) throws {
-    var ptr: OpaquePointer?
-    try key.withUnsafeBytes { keyBuffer in
-      try initializationVector.withUnsafeBytes { ivBuffer in
-        try data.withUnsafeBytes { data in
+    cryptorRef = try safeInitialize { ptr in
+      try key.withUnsafeBytes { keyBuffer in
+        try initializationVector.withUnsafeBytes { ivBuffer in
           try ccError(
-            CCCryptorCreateFromData(
+            CCCryptorCreate(
               numericCast(operation.rawValue),
               numericCast(algorithm.rawValue),
               numericCast(options.rawValue),
               keyBuffer.baseAddress, keyBuffer.count,
-              ivBuffer.baseAddress,
-              data.baseAddress, data.count,
-              &ptr, dataUsed)
+              ivBuffer.baseAddress, &ptr)
           )
         }
       }
     }
-    guard let v = ptr else {
-      throw CommonKryptoError.memoryFailure
+  }
+
+  @inlinable
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), data: UnsafeMutableRawBufferPointer, dataUsed: UnsafeMutablePointer<Int>?) throws {
+    cryptorRef = try safeInitialize { ptr in
+      try key.withUnsafeBytes { keyBuffer in
+        try initializationVector.withUnsafeBytes { ivBuffer in
+          try data.withUnsafeBytes { data in
+            try ccError(
+              CCCryptorCreateFromData(
+                numericCast(operation.rawValue),
+                numericCast(algorithm.rawValue),
+                numericCast(options.rawValue),
+                keyBuffer.baseAddress, keyBuffer.count,
+                ivBuffer.baseAddress,
+                data.baseAddress, data.count,
+                &ptr, dataUsed)
+            )
+          }
+        }
+      }
     }
-    self.cryptorRef = v
+  }
+
+  @inlinable
+  public init(operation: Operation, mode: Mode, algorithm: Algorithm, padding: Padding, options: ModeOptions, initializationVector: some ContiguousBytes = NoneInitializationVector(), key: some ContiguousBytes, tweak: some ContiguousBytes, rounds: Int32) throws {
+    cryptorRef = try safeInitialize { ptr in
+      try key.withUnsafeBytes { keyBuffer in
+        try tweak.withUnsafeBytes { tweak in
+          try initializationVector.withUnsafeBytes { ivBuffer in
+            try ccError(
+              CCCryptorCreateWithMode(
+                numericCast(operation.rawValue),
+                numericCast(mode.rawValue),
+                numericCast(algorithm.rawValue),
+                numericCast(padding.rawValue),
+                ivBuffer.baseAddress,
+                keyBuffer.baseAddress, keyBuffer.count,
+                tweak.baseAddress, tweak.count,
+                rounds,
+                numericCast(options.rawValue),
+                &ptr)
+            )
+          }
+        }
+      }
+    }
   }
 
   @inlinable
@@ -138,7 +158,6 @@ extension Cryptor {
       case .cast: return kCCContextSizeCAST
       case .rc4: return kCCContextSizeRC4
       default:
-        assertionFailure("Unsupported Block Size!")
         return 0
       }
     }
@@ -176,6 +195,57 @@ extension Cryptor {
 
     @_alwaysEmitIntoClient
     public static var ecbMode: Self { .init(rawValue: kCCOptionECBMode) }
+  }
+
+  public struct Mode: RawRepresentable, Equatable {
+    public let rawValue: Int
+    public init(rawValue: Int) {
+      self.rawValue = rawValue
+    }
+
+    @_alwaysEmitIntoClient
+    public static var ecb: Self { .init(rawValue: kCCModeECB) }
+
+    @_alwaysEmitIntoClient
+    public static var cbc: Self { .init(rawValue: kCCModeCBC) }
+
+    @_alwaysEmitIntoClient
+    public static var cfb: Self { .init(rawValue: kCCModeCFB) }
+
+    @_alwaysEmitIntoClient
+    public static var ctr: Self { .init(rawValue: kCCModeCTR) }
+
+    @_alwaysEmitIntoClient
+    public static var ofb: Self { .init(rawValue: kCCModeOFB) }
+
+    @_alwaysEmitIntoClient
+    public static var rc4: Self { .init(rawValue: kCCModeRC4) }
+
+    @_alwaysEmitIntoClient
+    public static var cfb8: Self { .init(rawValue: kCCModeCFB8) }
+  }
+
+  public struct Padding: RawRepresentable, Equatable {
+    public let rawValue: Int
+    public init(rawValue: Int) {
+      self.rawValue = rawValue
+    }
+
+    @_alwaysEmitIntoClient
+    public static var noPadding: Self { .init(rawValue: ccNoPadding) }
+
+    @_alwaysEmitIntoClient
+    public static var pkcs7Padding: Self { .init(rawValue: ccPKCS7Padding) }
+  }
+
+  public struct ModeOptions: RawRepresentable, Equatable {
+    public let rawValue: Int
+    public init(rawValue: Int) {
+      self.rawValue = rawValue
+    }
+
+    @_alwaysEmitIntoClient
+    public static var ctrBE: Self { .init(rawValue: kCCModeOptionCTR_BE) }
   }
 
   public struct NoneInitializationVector: ContiguousBytes {
