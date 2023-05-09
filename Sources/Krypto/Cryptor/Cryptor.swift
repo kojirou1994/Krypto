@@ -132,6 +132,52 @@ extension Cryptor {
       self.rawValue = rawValue
     }
 
+    public struct KeySize: RawRepresentable, Equatable {
+      public let rawValue: Int
+      public init(rawValue: Int) {
+        self.rawValue = rawValue
+      }
+
+      @_alwaysEmitIntoClient
+      public static var aes128: Self { .init(rawValue: kCCKeySizeAES128) }
+
+      @_alwaysEmitIntoClient
+      public static var aes192: Self { .init(rawValue: kCCKeySizeAES192) }
+
+      @_alwaysEmitIntoClient
+      public static var aes256: Self { .init(rawValue: kCCKeySizeAES256) }
+
+      @_alwaysEmitIntoClient
+      public static var des: Self { .init(rawValue: kCCKeySizeDES) }
+
+      @_alwaysEmitIntoClient
+      public static var tripleDES: Self { .init(rawValue: kCCKeySize3DES) }
+
+      @_alwaysEmitIntoClient
+      public static var minCAST: Self { .init(rawValue: kCCKeySizeMinCAST) }
+
+      @_alwaysEmitIntoClient
+      public static var maxCAST: Self { .init(rawValue: kCCKeySizeMaxCAST) }
+
+      @_alwaysEmitIntoClient
+      public static var minRC4: Self { .init(rawValue: kCCKeySizeMinRC4) }
+
+      @_alwaysEmitIntoClient
+      public static var maxRC4: Self { .init(rawValue: kCCKeySizeMaxRC4) }
+
+      @_alwaysEmitIntoClient
+      public static var minRC2: Self { .init(rawValue: kCCKeySizeMinRC2) }
+
+      @_alwaysEmitIntoClient
+      public static var maxRC2: Self { .init(rawValue: kCCKeySizeMaxRC2) }
+
+      @_alwaysEmitIntoClient
+      public static var minBlowfish: Self { .init(rawValue: kCCKeySizeMinBlowfish) }
+
+      @_alwaysEmitIntoClient
+      public static var maxBlowfish: Self { .init(rawValue: kCCKeySizeMaxBlowfish) }
+    }
+
     /// Block sizes, in bytes
     @inlinable
     public var blockSize: Int {
