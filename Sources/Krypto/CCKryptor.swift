@@ -28,6 +28,31 @@ public final class CCKryptor {
   }
 
   @inlinable
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), data: UnsafeMutableRawBufferPointer, dataUsed: UnsafeMutablePointer<Int>?) throws {
+    var ptr: OpaquePointer?
+    try key.withUnsafeBytes { keyBuffer in
+      try initializationVector.withUnsafeBytes { ivBuffer in
+        try data.withUnsafeBytes { data in
+          try ccError(
+            CCCryptorCreateFromData(
+              numericCast(operation.rawValue),
+              numericCast(algorithm.rawValue),
+              numericCast(options.rawValue),
+              keyBuffer.baseAddress, keyBuffer.count,
+              ivBuffer.baseAddress,
+              data.baseAddress, data.count,
+              &ptr, dataUsed)
+          )
+        }
+      }
+    }
+    guard let v = ptr else {
+      throw CommonKryptoError.memoryFailure
+    }
+    self.cryptorRef = v
+  }
+
+  @inlinable
   public func update(input: some ContiguousBytes, to output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws {
     try input.withUnsafeBytes { inputBuffer in
       try ccError(
@@ -94,6 +119,21 @@ extension CCKryptor {
       case .cast: return kCCBlockSizeCAST
       case .rc2: return kCCBlockSizeRC2
       case .blowfish: return kCCBlockSizeBlowfish
+      default:
+        assertionFailure("Unsupported Block Size!")
+        return 0
+      }
+    }
+
+    /// Minimum context sizes, for caller-allocated CCKryptor.
+    @inlinable
+    public var minimumContextSize: Int {
+      switch self {
+      case .aes: return kCCContextSizeAES128
+      case .des: return kCCContextSizeDES
+      case .tripleDES: return kCCContextSize3DES
+      case .cast: return kCCContextSizeCAST
+      case .rc4: return kCCContextSizeRC4
       default:
         assertionFailure("Unsupported Block Size!")
         return 0
