@@ -4,19 +4,24 @@ import CommonCrypto
 
 public enum AESCBC {
 
-  public static func decrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws -> [UInt8] {
+  public static func decrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws(CommonKryptoError) -> [UInt8] {
     try _cbc(input: input, key: key, iv: iv, operation: .decryption)
   }
 
-  public static func encrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws -> [UInt8] {
+  public static func encrypt(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes) throws(CommonKryptoError) -> [UInt8] {
     try _cbc(input: input, key: key, iv: iv, operation: .encryption)
   }
 
-  private static func _cbc(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes, operation: Cryptor.Operation) throws -> [UInt8] {
+  private static func _cbc(input: some ContiguousBytes, key: some ContiguousBytes, iv: some ContiguousBytes, operation: Cryptor.Operation) throws(CommonKryptoError) -> [UInt8] {
     let outputBufferLength = input.withUnsafeBytes(\.count) + Cryptor.Algorithm.aes.blockSize
-    return try [UInt8](unsafeUninitializedCapacity: outputBufferLength) { outputBuffer, initializedCount in
-      try Cryptor.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
-    }
+    do {
+      // old std init func has no generic error throwing..
+      return try [UInt8](unsafeUninitializedCapacity: outputBufferLength) { outputBuffer, initializedCount in
+        try Cryptor.crypt(operation: operation, algorithm: .aes, options: .pkcs7Padding, key: key, initializationVector: iv, input: input, outputBuffer: outputBuffer, dataOutMoved: &initializedCount)
+      }
+    } catch let err as CommonKryptoError {
+      throw err
+    } catch { fatalError() }
   }
 }
 

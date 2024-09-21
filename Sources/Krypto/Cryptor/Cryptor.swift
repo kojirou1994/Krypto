@@ -11,30 +11,30 @@ public final class Cryptor {
   internal let cryptorRef: OpaquePointer
 
   @inlinable
-  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector()) throws {
-    cryptorRef = try safeInitialize { ptr in
-      try key.withUnsafeBytes { keyBuffer in
-        try initializationVector.withUnsafeBytes { ivBuffer in
-          try ccError(
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector()) throws(CommonKryptoError) {
+    cryptorRef = try safeInitialize { ptr throws(CommonKryptoError) in
+      try ccError {
+        key.withUnsafeBytes { keyBuffer in
+          initializationVector.withUnsafeBytes { ivBuffer in
             CCCryptorCreate(
               numericCast(operation.rawValue),
               numericCast(algorithm.rawValue),
               numericCast(options.rawValue),
               keyBuffer.baseAddress, keyBuffer.count,
               ivBuffer.baseAddress, &ptr)
-          )
+          }
         }
       }
     }
   }
 
   @inlinable
-  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), data: UnsafeMutableRawBufferPointer, dataUsed: UnsafeMutablePointer<Int>?) throws {
-    cryptorRef = try safeInitialize { ptr in
-      try key.withUnsafeBytes { keyBuffer in
-        try initializationVector.withUnsafeBytes { ivBuffer in
-          try data.withUnsafeBytes { data in
-            try ccError(
+  public init(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), data: UnsafeMutableRawBufferPointer, dataUsed: UnsafeMutablePointer<Int>?) throws(CommonKryptoError) {
+    cryptorRef = try safeInitialize { ptr throws(CommonKryptoError) in
+      try ccError {
+        key.withUnsafeBytes { keyBuffer in
+          initializationVector.withUnsafeBytes { ivBuffer in
+            data.withUnsafeBytes { data in
               CCCryptorCreateFromData(
                 numericCast(operation.rawValue),
                 numericCast(algorithm.rawValue),
@@ -43,7 +43,7 @@ public final class Cryptor {
                 ivBuffer.baseAddress,
                 data.baseAddress, data.count,
                 &ptr, dataUsed)
-            )
+            }
           }
         }
       }
@@ -51,12 +51,12 @@ public final class Cryptor {
   }
 
   @inlinable
-  public init(operation: Operation, mode: Mode, algorithm: Algorithm, padding: Padding, options: ModeOptions, initializationVector: some ContiguousBytes = NoneInitializationVector(), key: some ContiguousBytes, tweak: some ContiguousBytes, rounds: Int32) throws {
-    cryptorRef = try safeInitialize { ptr in
-      try key.withUnsafeBytes { keyBuffer in
-        try tweak.withUnsafeBytes { tweak in
-          try initializationVector.withUnsafeBytes { ivBuffer in
-            try ccError(
+  public init(operation: Operation, mode: Mode, algorithm: Algorithm, padding: Padding, options: ModeOptions, initializationVector: some ContiguousBytes = NoneInitializationVector(), key: some ContiguousBytes, tweak: some ContiguousBytes, rounds: Int32) throws(CommonKryptoError) {
+    cryptorRef = try safeInitialize { ptr throws(CommonKryptoError) in
+      try ccError {
+        key.withUnsafeBytes { keyBuffer in
+          tweak.withUnsafeBytes { tweak in
+            initializationVector.withUnsafeBytes { ivBuffer in
               CCCryptorCreateWithMode(
                 numericCast(operation.rawValue),
                 numericCast(mode.rawValue),
@@ -68,7 +68,7 @@ public final class Cryptor {
                 rounds,
                 numericCast(options.rawValue),
                 &ptr)
-            )
+            }
           }
         }
       }
@@ -76,27 +76,27 @@ public final class Cryptor {
   }
 
   @inlinable
-  public func update(input: some ContiguousBytes, to output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws {
-    try input.withUnsafeBytes { inputBuffer in
-      try ccError(
+  public func update(input: some ContiguousBytes, to output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws(CommonKryptoError) {
+    try ccError {
+      input.withUnsafeBytes { inputBuffer in
         CCCryptorUpdate(cryptorRef, inputBuffer.baseAddress, inputBuffer.count, output.baseAddress, output.count, &dataOutMoved)
-      )
+      }
     }
   }
 
   @inlinable
-  public func final(output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws {
-    try ccError(
+  public func final(output: UnsafeMutableRawBufferPointer, dataOutMoved: inout Int) throws(CommonKryptoError) {
+    try ccError {
       CCCryptorFinal(cryptorRef, output.baseAddress, output.count, &dataOutMoved)
-    )
+    }
   }
 
   @inlinable
-  public func reset(newInitializationVector: some ContiguousBytes = NoneInitializationVector()) throws {
-    try newInitializationVector.withUnsafeBytes { ivBuffer in
-      try ccError(
+  public func reset(newInitializationVector: some ContiguousBytes = NoneInitializationVector()) throws(CommonKryptoError) {
+    try ccError {
+      newInitializationVector.withUnsafeBytes { ivBuffer in
         CCCryptorReset(cryptorRef, ivBuffer.baseAddress)
-      )
+      }
     }
   }
 
@@ -110,7 +110,6 @@ public final class Cryptor {
     CCCryptorRelease(cryptorRef)
   }
 }
-#endif
 
 extension Cryptor {
   public struct Operation: RawRepresentable, Equatable {
@@ -305,11 +304,11 @@ extension Cryptor {
 
 
 public extension Cryptor {
-  static func crypt(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
-    try input.withUnsafeBytes { inputBuffer in
-      try key.withUnsafeBytes { keyBuffer in
-        try initializationVector.withUnsafeBytes { ivBuffer in
-          try ccError(
+  static func crypt(operation: Operation, algorithm: Algorithm, options: Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws(CommonKryptoError) {
+    try ccError {
+      input.withUnsafeBytes { inputBuffer in
+        key.withUnsafeBytes { keyBuffer in
+          initializationVector.withUnsafeBytes { ivBuffer in
             CCCrypt(
               numericCast(operation.rawValue),
               numericCast(algorithm.rawValue),
@@ -320,9 +319,11 @@ public extension Cryptor {
               outputBuffer.baseAddress, outputBuffer.count,
               &dataOutMoved
             )
-          )
+          }
         }
       }
     }
   }
 }
+
+#endif

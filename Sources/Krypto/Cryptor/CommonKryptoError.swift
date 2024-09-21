@@ -1,7 +1,7 @@
 #if canImport(CommonCrypto)
 import CommonCrypto
 
-public struct CommonKryptoError: RawRepresentable, Error, Equatable {
+public struct CommonKryptoError: RawRepresentable, Error, Equatable, Sendable {
   public init(rawValue: CCStatus) {
     self.rawValue = rawValue
   }
@@ -82,7 +82,8 @@ public extension CommonKryptoError {
 }
 
 @usableFromInline
-func ccError(_ status: CCStatus) throws {
+func ccError(_ body: () -> CCStatus) throws(CommonKryptoError) {
+  let status = body()
   if status != kCCSuccess {
     throw CommonKryptoError(rawValue: status)
   }
@@ -91,7 +92,7 @@ func ccError(_ status: CCStatus) throws {
 public enum CommonKrypto {
 
   @available(*, deprecated, renamed: "Cryptor.crypt")
-  public static func crypt(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = CCKryptor.NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws {
+  public static func crypt(operation: CCKryptor.Operation, algorithm: CCKryptor.Algorithm, options: CCKryptor.Options, key: some ContiguousBytes, initializationVector: some ContiguousBytes = CCKryptor.NoneInitializationVector(), input: some ContiguousBytes, outputBuffer: UnsafeMutableBufferPointer<UInt8>, dataOutMoved: inout Int) throws(CommonKryptoError) {
     try Cryptor.crypt(operation: operation, algorithm: algorithm, options: options, key: key, initializationVector: initializationVector, input: input, outputBuffer: outputBuffer, dataOutMoved: &dataOutMoved)
   }
 }
