@@ -1,5 +1,6 @@
 import XCTest
 import Krypto
+import CryptoKit
 
 final class KryptoTests: XCTestCase {
   func testWrappers() throws {
@@ -37,5 +38,16 @@ final class KryptoTests: XCTestCase {
 
     XCTAssertEqual(oneShotEncryptedData, streamEntryptedData)
 
+  }
+
+  func testDig() async {
+
+    let d = Data(count: 200)
+
+    XCTAssertTrue(Insecure.SHA1.hash(data: d).elementsEqual(GenericStackDigest.sha1().hash(bytes: d)))
+
+    XCTAssertTrue(SHA256.hash(data: d).elementsEqual(GenericStackDigest.sha256().hash(bytes: d)))
+    XCTAssertTrue(SHA384.hash(data: d).elementsEqual(GenericStackDigest.sha384().hash(bytes: d)))
+    XCTAssertTrue(SHA512.hash(data: d).elementsEqual(GenericStackDigest.sha512().hash(bytes: d)))
   }
 }
