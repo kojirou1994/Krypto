@@ -5,7 +5,7 @@ import CUtility
 @available(*, deprecated, renamed: "Cryptor")
 public typealias CCKryptor = Cryptor
 
-public final class Cryptor {
+public struct Cryptor: ~Copyable {
 
   @usableFromInline
   internal let cryptorRef: OpaquePointer
@@ -112,7 +112,7 @@ public final class Cryptor {
 }
 
 extension Cryptor {
-  public struct Operation: RawRepresentable, Equatable {
+  public struct Operation: RawRepresentable, Equatable, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
@@ -125,13 +125,13 @@ extension Cryptor {
     public static var decryption: Self { .init(rawValue: kCCDecrypt) }
   }
 
-  public struct Algorithm: RawRepresentable, Equatable {
+  public struct Algorithm: RawRepresentable, Equatable, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
     }
 
-    public struct KeySize: RawRepresentable, Equatable {
+    public struct KeySize: RawRepresentable, Equatable, Sendable {
       public let rawValue: Int
       public init(rawValue: Int) {
         self.rawValue = rawValue
@@ -229,7 +229,7 @@ extension Cryptor {
     public static var blowfish: Self { .init(rawValue: kCCAlgorithmBlowfish) }
   }
 
-  public struct Options: OptionSet {
+  public struct Options: OptionSet, Sendable {
     public var rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
@@ -242,7 +242,7 @@ extension Cryptor {
     public static var ecbMode: Self { .init(rawValue: kCCOptionECBMode) }
   }
 
-  public struct Mode: RawRepresentable, Equatable {
+  public struct Mode: RawRepresentable, Equatable, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
@@ -270,7 +270,7 @@ extension Cryptor {
     public static var cfb8: Self { .init(rawValue: kCCModeCFB8) }
   }
 
-  public struct Padding: RawRepresentable, Equatable {
+  public struct Padding: RawRepresentable, Equatable, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
@@ -283,7 +283,7 @@ extension Cryptor {
     public static var pkcs7Padding: Self { .init(rawValue: ccPKCS7Padding) }
   }
 
-  public struct ModeOptions: RawRepresentable, Equatable {
+  public struct ModeOptions: RawRepresentable, Equatable, Sendable {
     public let rawValue: Int
     public init(rawValue: Int) {
       self.rawValue = rawValue
@@ -293,7 +293,7 @@ extension Cryptor {
     public static var ctrBE: Self { .init(rawValue: kCCModeOptionCTR_BE) }
   }
 
-  public struct NoneInitializationVector: ContiguousBytes {
+  public struct NoneInitializationVector: ContiguousBytes, Sendable {
     public init() {}
     @inlinable
     public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
